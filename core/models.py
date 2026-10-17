@@ -70,7 +70,7 @@ class Orden(models.Model):
         unique_together = ('asignacion', 'secuencia')
 
     def __str__(self):
-        return f"Orden #{self.secuencia} - {self.accion}"
+        return f"Orden #{self.secuencia} {self.accion}"
 
 
 class Hallazgo(models.Model):

@@ -14,7 +14,7 @@ class Sensor(models.Model):
         unique_together = ('robot', 'canal')
 
     def __str__(self):
-        return f"{self.robot.codigo} - {self.tipo} ({self.canal})"
+        return f"{self.robot.codigo} {self.tipo} ({self.canal})"
 
 
 class Lectura(models.Model):
@@ -45,4 +45,4 @@ class Evento(models.Model):
         verbose_name_plural = "Eventos/Bitácoras"
 
     def __str__(self):
-        return f"[{self.fecha_hora}] {self.accion} - {self.resultado}"
+        return f"[{self.fecha_hora}] {self.accion} {self.resultado}"
