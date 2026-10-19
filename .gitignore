@@ -1,0 +1,7 @@
+AmbienteTest/
+venv/
+*.pyc
+__pycache__/
+*.sqlite3
+.vscode/
+.DS_Store
