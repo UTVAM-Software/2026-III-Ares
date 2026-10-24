@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Actividad y Trazabilidad - ARES{% endblock %}
+{% block page_title %}Actividad y Bitácora (Mockup 05 / RNF-08){% endblock %}
+
+{% block content %}
+<div class="ares-card">
+  <div class="ares-card-header">
+    <div>
+      <h3 class="ares-card-title">Actividad de Misión & Auditoría de Seguridad</h3>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Reconstrucción de operaciones sin exponer credenciales ni datos sensibles (RF-11 / RNF-08)</span>
+    </div>
+    {% if ares_admin %}
+    <a href="{% url 'telemetria:evento_admin_list' %}" class="ares-btn ares-btn-secondary ares-btn-sm">Administrar eventos manuales</a>
+    {% endif %}
+  </div>
+
+  {{ filters.errors }}
+  <!-- Barra de Filtros (Mockup 05) -->
+  <div style="background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+    <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto; gap: 1rem; align-items: flex-end;">
+      <div>
+        <label class="ares-form-label">Filtrar por Misión</label>
+        <select name="mision" class="ares-input">
+          <option value="">Todas las misiones</option>
+          {% for m in misiones %}
+            <option value="{{ m.pk }}" {% if selected_mision == m.pk|stringformat:"s" %}selected{% endif %}>
+              {{ m.nombre }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="ares-form-label">Resultado / Tipo</label>
+        <input type="text" name="resultado" class="ares-input" placeholder="Éxito, Concluida, Fallo..." value="{{ request.GET.resultado }}">
+      </div>
+
+      <div>
+        <label class="ares-form-label">Búsqueda de Acción</label>
+        <input type="text" name="q" class="ares-input" placeholder="Buscar texto en acción..." value="{{ q }}">
+      </div>
+
+      <div><label for="desde">Desde</label><input class="ares-input" id="desde" name="desde" type="date" value="{{ request.GET.desde }}"></div>
+      <div><label for="hasta">Hasta</label><input class="ares-input" id="hasta" name="hasta" type="date" value="{{ request.GET.hasta }}"></div>
+      <div><label for="tipo">Tipo de acción</label><input class="ares-input" id="tipo" name="tipo" value="{{ request.GET.tipo }}"></div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="submit" class="ares-btn ares-btn-primary">Filtrar</button>
+        <a href="{% url 'telemetria:evento_list' %}" class="ares-btn ares-btn-secondary">Limpiar</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="ares-table-wrapper">
+    <table class="ares-table">
+      <thead>
+        <tr>
+          <th>Marca Temporal</th>
+          <th>Actor / Usuario</th>
+          <th>Robot</th>
+          <th>Misión</th>
+          <th>Acción Registrada</th>
+          <th>Resultado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ev in eventos %}
+        <tr>
+          <td style="font-family: monospace; font-size: 0.85rem; color: var(--text-dim);">
+            {{ ev.fecha_hora|date:"Y-m-d H:i:s" }}
+          </td>
+          <td>
+            {% if ev.actor %}
+              {{ ev.actor.nombre }}
+            {% else %}
+              <span style="color: var(--text-dim);">Sistema / Autónomo</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if ev.robot %}
+              <span style="font-family: monospace; color: var(--primary);">{{ ev.robot.codigo }}</span>
+            {% else %}
+              --
+            {% endif %}
+          </td>
+          <td>
+            {% if ev.mision %}
+              <a href="{% url 'core:mision_detail' ev.mision.pk %}">{{ ev.mision.nombre }}</a>
+            {% else %}
+              --
+            {% endif %}
+          </td>
+          <td style="font-weight: 600;">{{ ev.accion }}</td>
+          <td>
+            <span class="badge badge-{{ ev.resultado|lower }}">
+              {{ ev.resultado }}
+            </span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2.5rem;">
+            No se encontraron eventos con los filtros especificados.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'pagination.html' %}
+</div>
+{% endblock %}

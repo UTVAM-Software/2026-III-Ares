@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load ares_actions %}
+
+{% block title %}Inventario de Robots - ARES{% endblock %}
+{% block page_title %}Inventario de Robots{% endblock %}
+
+{% block content %}
+<div class="ares-card">
+  <div class="ares-card-header">
+    <div>
+      <h3 class="ares-card-title">Dispositivos y Robots de Exploración</h3>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Gestión de credenciales por dispositivo y estado operativo (RF-03)</span>
+    </div>
+    
+    {% if ares_can.add_robot %}<a href="{% url 'core:robot_create' %}" class="ares-btn ares-btn-primary">
+      <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Registrar Robot
+    </a>{% endif %}
+    
+  </div>
+
+  <div class="ares-table-wrapper">
+    <table class="ares-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre / Alias</th>
+          <th>Estado Operativo</th>
+          <th>Sensores Instalados</th>
+          <th>Misiones Totales</th>
+          <th>Registrado Por</th>
+          
+          <th style="text-align: right;">Acciones</th>
+          
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in robots %}{% object_actions r as actions %}
+        <tr>
+          <td style="font-family: monospace; font-weight: 700; color: var(--primary);">
+            {{ r.codigo }}
+          </td>
+          <td style="font-weight: 600;">{{ r.nombre }}</td>
+          <td>
+            {% if r.activo %}
+              <span class="badge badge-en_curso">Activo</span>
+            {% else %}
+              <span class="badge badge-cerrada">Revocado / Inactivo</span>
+            {% endif %}
+          </td>
+          <td>{{ r.sensores_visibles }} sensores</td>
+          <td>{{ r.misiones_visibles }}</td>
+          <td>{{ r.creador.nombre }}</td>
+          
+          <td style="text-align: right;">
+            {% if actions.change %}<a href="{% url 'core:robot_update' r.pk %}" class="ares-btn ares-btn-secondary ares-btn-sm">Editar</a>{% endif %}
+            {% if actions.delete %}<a href="{% url 'core:robot_delete' r.pk %}" class="ares-btn ares-btn-danger ares-btn-sm">Eliminar</a>{% endif %}
+          </td>
+          
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+            No hay robots registrados en el sistema.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% include 'pagination.html' %}
+</div>
+{% endblock %}

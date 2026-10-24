@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load ares_actions %}
+
+{% block title %}Usuarios Django Auth - ARES{% endblock %}
+{% block page_title %}Gestión de Usuarios (Django Auth){% endblock %}
+
+{% block content %}
+<div class="ares-card">
+  <div class="ares-card-header">
+    <div>
+      <h3 class="ares-card-title">Usuarios del Sistema (`auth.User`)</h3>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Administración directa de cuentas, roles y accesos sin depender del panel /admin (Requerimiento 4)</span>
+    </div>
+    {% if ares_can.add_user %}<a href="{% url 'usuarios:auth_user_create' %}" class="ares-btn ares-btn-primary">
+      <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+      Nuevo Usuario
+    </a>{% endif %}
+  </div>
+
+  <!-- Buscador -->
+  <div style="margin-bottom: 1.25rem;">
+    <form method="get" style="display: flex; gap: 0.5rem; max-width: 400px;">
+      <input type="text" name="q" class="ares-input" placeholder="Buscar por username o email..." value="{{ request.GET.q }}">
+      <button type="submit" class="ares-btn ares-btn-secondary">Buscar</button>
+    </form>
+  </div>
+
+  <div class="ares-table-wrapper">
+    <table class="ares-table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Nombre Completo</th>
+          <th>Correo Electrónico</th>
+          <th>Grupos / Roles Asignados</th>
+          <th>Estado</th>
+          <th>Superusuario</th>
+          <th style="text-align: right;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}{% object_actions u as actions %}
+        <tr>
+          <td style="font-weight: 700; color: var(--primary);">{{ u.username }}</td>
+          <td>{{ u.get_full_name|default:"--" }}</td>
+          <td>{{ u.email|default:"--" }}</td>
+          <td>
+            {% for g in u.groups.all %}
+              <span class="badge badge-pausada" style="margin-right: 0.25rem;">{{ g.name }}</span>
+            {% empty %}
+              <span style="color: var(--text-dim); font-size: 0.8rem;">Sin grupo asignado</span>
+            {% endfor %}
+          </td>
+          <td>
+            {% if u.is_active %}
+              <span class="badge badge-en_curso">Activo</span>
+            {% else %}
+              <span class="badge badge-cerrada">Inactivo</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.is_superuser %}
+              <span class="badge badge-rechazada">Superadmin</span>
+            {% else %}
+              <span style="color: var(--text-dim);">No</span>
+            {% endif %}
+          </td>
+          <td style="text-align: right;">
+            {% if actions.change %}<a href="{% url 'usuarios:auth_user_update' u.pk %}" class="ares-btn ares-btn-secondary ares-btn-sm">Editar / Permisos</a>{% endif %}
+            {% if u != user %}
+            {% if actions.delete %}<a href="{% url 'usuarios:auth_user_delete' u.pk %}" class="ares-btn ares-btn-danger ares-btn-sm">Eliminar</a>{% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+            No se encontraron usuarios.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'pagination.html' %}
+</div>
+{% endblock %}

@@ -1,6 +1,4 @@
 from django.contrib import admin
-from .models import Sensor, Lectura, Evento
-
-admin.site.register(Sensor)
-admin.site.register(Lectura)
-admin.site.register(Evento)
+from core.admin import ConsultationAdmin
+from .models import Sensor,Lectura,Evento
+for model in (Sensor,Lectura,Evento): admin.site.register(model,ConsultationAdmin)

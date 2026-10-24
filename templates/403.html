@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}403 - Acceso Denegado (OWASP A01){% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 3rem auto; text-align: center;">
+  <div class="ares-card" style="padding: 3rem 2rem; border-color: rgba(239, 68, 68, 0.4);">
+    <div style="width: 64px; height: 64px; background-color: rgba(239, 68, 68, 0.15); border: 2px solid var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--danger);">
+      <svg style="width: 32px; height: 32px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    </div>
+    
+    <h1 style="font-size: 1.8rem; font-weight: 700; color: #F1F5F9; margin-bottom: 0.75rem;">
+      403 - Control de Acceso Roto Mitigado
+    </h1>
+    <span class="badge badge-rechazada" style="margin-bottom: 1.5rem; display: inline-block;">
+      OWASP Top 10:2021 #1 Broken Access Control
+    </span>
+
+    <p style="color: #94A3B8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">
+      No posees los permisos necesarios o tu rol actual no está autorizado para acceder a este recurso o modificar este objeto (Anti-IDOR). Las manipulaciones manuales de URL o parámetros han sido bloqueadas por las políticas del sistema.
+    </p>
+
+    <div style="display: flex; justify-content: center; gap: 1rem;">
+      <a href="{% url 'core:dashboard' %}" class="ares-btn ares-btn-primary">
+        Volver al Centro de Operaciones
+      </a>
+      <a href="javascript:history.back()" class="ares-btn ares-btn-secondary">
+        Regresar a la página anterior
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

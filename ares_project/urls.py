@@ -1,22 +1,22 @@
 """
-URL configuration for ares_project project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+Configuración principal de URLs de ARES.
+Incluye rutas para autenticación, Centro de Operaciones (core),
+módulos de telemetría y administración de Django Auth.
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from usuarios.views import AresLoginView, AresLogoutView
 
 urlpatterns = [
+    # Panel nativo de Django
     path('admin/', admin.site.urls),
+
+    # Autenticación principal
+    path('login/', AresLoginView.as_view(), name='login'),
+    path('logout/', AresLogoutView.as_view(), name='logout'),
+
+    # Centro de operaciones y módulos de negocio
+    path('', include('core.urls')),
+    path('usuarios/', include('usuarios.urls')),
+    path('telemetria/', include('telemetria.urls')),
 ]

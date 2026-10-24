@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load ares_actions %}
+
+{% block title %}Usuarios de Negocio - ARES{% endblock %}
+{% block page_title %}Usuarios de la Entidad de Negocio (`usuarios_usuario`){% endblock %}
+
+{% block content %}
+<div class="ares-card">
+  <div class="ares-card-header">
+    <div>
+      <h3 class="ares-card-title">Usuarios del Negocio ARES</h3>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Entidad de negocio vinculada a misiones, asignaciones y autoría de órdenes</span>
+    </div>
+    {% if ares_can.add_usuario %}<a href="{% url 'usuarios:usuario_create' %}" class="ares-btn ares-btn-primary">
+      <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Usuario de Negocio
+    </a>{% endif %}
+  </div>
+
+  <div class="ares-table-wrapper">
+    <table class="ares-table">
+      <thead>
+        <tr>
+          <th>Nombre Completo</th>
+          <th>Correo Institucional</th>
+          <th>Rol ARES</th>
+          <th>Estado</th>
+          <th style="text-align: right;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios_negocio %}{% object_actions u as actions %}
+        <tr>
+          <td style="font-weight: 600; color: var(--text-main);">{{ u.nombre }}</td>
+          <td>{{ u.email }}</td>
+          <td>
+            <span class="badge badge-pausada">{{ u.rol.nombre }}</span>
+          </td>
+          <td>
+            {% if u.activo %}
+              <span class="badge badge-en_curso">Activo</span>
+            {% else %}
+              <span class="badge badge-cerrada">Inactivo</span>
+            {% endif %}
+          </td>
+          <td style="text-align: right;">
+            {% if actions.change %}<a href="{% url 'usuarios:usuario_update' u.pk %}" class="ares-btn ares-btn-secondary ares-btn-sm">Editar</a>{% endif %}
+            {% if actions.delete %}<a href="{% url 'usuarios:usuario_delete' u.pk %}" class="ares-btn ares-btn-danger ares-btn-sm">Eliminar</a>{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+            No hay usuarios registrados en la tabla de negocio.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% include 'pagination.html' %}
+</div>
+{% endblock %}

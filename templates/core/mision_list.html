@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load ares_actions %}
+
+{% block title %}Misiones de Exploración - ARES{% endblock %}
+{% block page_title %}Gestión de Misiones{% endblock %}
+
+{% block content %}
+<div class="ares-card">
+  <div class="ares-card-header">
+    <div>
+      <h3 class="ares-card-title">Misiones de Exploración</h3>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Registro y trazabilidad de operaciones</span>
+    </div>
+    
+    {% if ares_can.add_mision %}<a href="{% url 'core:mision_create' %}" class="ares-btn ares-btn-primary">
+      <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nueva Misión
+    </a>{% endif %}
+    
+  </div>
+
+  {% include 'list_filters.html' %}
+
+  <div class="ares-table-wrapper">
+    <table class="ares-table">
+      <thead>
+        <tr>
+          <th>Nombre de Misión</th>
+          <th>Zona</th>
+          <th>Robot Asignado</th>
+          <th>Estado</th>
+          <th>Creador</th>
+          <th>Inicio</th>
+          <th style="text-align: right;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in misiones %}{% object_actions m as actions %}
+        <tr>
+          <td style="font-weight: 600;">
+            <a href="{% url 'core:mision_detail' m.pk %}">{{ m.nombre }}</a>
+          </td>
+          <td>{{ m.zona }}</td>
+          <td>
+            <span style="font-family: monospace; color: var(--primary);">{{ m.robot.codigo }}</span>
+          </td>
+          <td>
+            <span class="badge badge-{{ m.estado }}">{{ m.get_estado_display }}</span>
+          </td>
+          <td>{{ m.creador.nombre }}</td>
+          <td>{{ m.inicio|date:"Y-m-d H:i"|default:"--" }}</td>
+          <td style="text-align: right;">
+            <a href="{% url 'core:mision_detail' m.pk %}" class="ares-btn ares-btn-secondary ares-btn-sm">Consola</a>
+            
+            {% if actions.change %}<a href="{% url 'core:mision_update' m.pk %}" class="ares-btn ares-btn-secondary ares-btn-sm">Editar</a>{% endif %}
+            
+            
+            {% if actions.delete %}<a href="{% url 'core:mision_delete' m.pk %}" class="ares-btn ares-btn-danger ares-btn-sm">Eliminar</a>{% endif %}
+            
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+            No se encontraron misiones registradas.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'pagination.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load ares_actions %}
+
+{% block title %}Órdenes de Movimiento - ARES{% endblock %}
+{% block page_title %}Órdenes de Movimiento Manual (RF-07){% endblock %}
+
+{% block content %}
+<div class="ares-card">
+  <div class="ares-card-header">
+    <div>
+      <h3 class="ares-card-title">Histórico de Órdenes</h3>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Validación de operador, misión, límites, secuencia y vencimiento</span>
+    </div>
+    
+    {% if ares_can.add_orden %}<a href="{% url 'core:orden_create' %}" class="ares-btn ares-btn-primary">
+      <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Emitir Nueva Orden
+    </a>{% endif %}
+    
+  </div>
+
+  {% include 'list_filters.html' %}
+
+  <div class="ares-table-wrapper">
+    <table class="ares-table">
+      <thead>
+        <tr>
+          <th>Secuencia</th>
+          <th>Acción</th>
+          <th>Misión</th>
+          <th>Operador</th>
+          <th>Vencimiento</th>
+          <th>Resultado / Estado</th>
+          
+          <th style="text-align: right;">Acciones</th>
+          
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in ordenes %}{% object_actions o as actions %}
+        <tr>
+          <td style="font-family: monospace; font-weight: 700;">#{{ o.secuencia }}</td>
+          <td style="font-weight: 600; text-transform: uppercase; color: var(--primary);">{{ o.accion }}</td>
+          <td>{{ o.asignacion.mision.nombre }}</td>
+          <td>{{ o.asignacion.usuario.nombre }}</td>
+          <td>{{ o.vencimiento|date:"Y-m-d H:i:s" }}</td>
+          <td>
+            <span class="badge badge-{{ o.estado_confirmacion }}">{{ o.estado_confirmacion }}</span>
+            {% if o.esta_vencida %}<small> · Vigencia vencida</small>{% endif %}
+          </td>
+          
+          <td style="text-align: right;">
+            {% if actions.change %}<a href="{% url 'core:orden_update' o.pk %}" class="ares-btn ares-btn-secondary ares-btn-sm">Editar</a>{% endif %}
+            {% if actions.delete %}<a href="{% url 'core:orden_delete' o.pk %}" class="ares-btn ares-btn-danger ares-btn-sm">Eliminar</a>{% endif %}
+          </td>
+          
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+            No hay órdenes de movimiento registradas.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% include 'pagination.html' %}
+</div>
+{% endblock %}

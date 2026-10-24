@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Centro de Operaciones - ARES{% endblock %}
+{% block page_title %}Centro de Operaciones{% endblock %}
+
+{% block content %}
+<div class="ares-alert ares-alert-info" role="status">{% if robot_activo.conectado %}Enlace confirmado recientemente.{% else %}Sin enlace confirmado. Estado de parada desconocido hasta recibir confirmación del dispositivo.{% endif %} Panel de demostración: el robot aún no está integrado. Las lecturas manuales son simuladas. Los estados se calculan al cargar la página. Video: sin señal; no hay cámara integrada.</div>
+<!-- Tarjetas de Estado Superior (Mockup 02) -->
+<div class="ares-grid-stats">
+  <div class="ares-stat-box">
+    <span class="ares-stat-label">Robot Activo</span>
+    <span class="ares-stat-value" style="color: var(--primary);">
+      {% if robot_activo %}{{ robot_activo.codigo }}{% else %}Sin Robot{% endif %}
+    </span>
+    <span style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem;">
+      {% if robot_activo %}{{ robot_activo.nombre }}{% else %}Conexión pendiente{% endif %}
+    </span>
+  </div>
+
+  <div class="ares-stat-box">
+    <span class="ares-stat-label">Batería de demostración</span>
+    <span class="ares-stat-value" style="color: var(--success);">
+      84 %
+    </span>
+    <span style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem;">
+      Dato simulado · Robot pendiente de conexión
+    </span>
+  </div>
+
+  <div class="ares-stat-box">
+    <span class="ares-stat-label">Estado de Misión</span>
+    <div>
+      {% if mision_activa %}
+        <span class="badge badge-{{ mision_activa.estado }}" style="font-size: 0.9rem; padding: 0.35rem 0.75rem;">
+          {{ mision_activa.get_estado_display }}
+        </span>
+      {% else %}
+        <span class="badge badge-planificada">Sin Misión en Curso</span>
+      {% endif %}
+    </div>
+    <span style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.4rem;">
+      {% if mision_activa %}{{ mision_activa.nombre }}{% else %}Planifique una misión{% endif %}
+    </span>
+  </div>
+
+  <div class="ares-stat-box">
+    <span class="ares-stat-label">Enlace Local</span>
+    <span class="ares-stat-value" style="color: var(--info);">
+      {% if robot_activo.conectado %}Conectado{% else %}Sin enlace{% endif %}
+    </span>
+    <span style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem;">
+      {% if robot_activo.ultima_conexion %}Último contacto: {{ robot_activo.ultima_conexion|date:"H:i:s" }}{% else %}No hay confirmación del dispositivo{% endif %}
+    </span>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+  
+  <!-- Panel Izquierdo: Plano Ilustrativo y Misión -->
+  <div class="ares-card">
+    <div class="ares-card-header">
+      <h3 class="ares-card-title">Plano Ilustrativo del Escenario</h3>
+      {% if mision_activa %}
+      <a href="{% url 'core:mision_detail' mision_activa.pk %}" class="ares-btn ares-btn-secondary ares-btn-sm">
+        Ver Consola Completa
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- Simulación visual del plano como en el Mockup 02 -->
+    <div style="background-color: #070D18; border: 1px solid var(--border-color); border-radius: 8px; height: 260px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+      <!-- Grid de fondo -->
+      <div style="position: absolute; inset: 0; background-image: radial-gradient(#233554 1px, transparent 1px); background-size: 20px 20px; opacity: 0.4;"></div>
+      
+      <!-- Obstáculos simulados -->
+      <div style="position: absolute; left: 20%; top: 30%; width: 60px; height: 60px; background-color: rgba(30, 45, 71, 0.8); border: 1px solid var(--border-color); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--text-dim);">Zona A</div>
+      <div style="position: absolute; right: 25%; top: 40%; width: 80px; height: 70px; background-color: rgba(30, 45, 71, 0.8); border: 1px solid var(--border-color); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--text-dim);">Escombros B</div>
+      
+      <!-- Trayectoria y robot -->
+      <svg style="position: absolute; inset: 0; width: 100%; height: 100%;">
+        <path d="M 120 180 L 220 180 L 220 110 L 340 110" fill="none" stroke="#F97316" stroke-width="2" stroke-dasharray="4"/>
+      </svg>
+      <div style="position: absolute; left: 335px; top: 105px; width: 14px; height: 14px; background-color: #F97316; border-radius: 50%; box-shadow: 0 0 10px #F97316;"></div>
+
+      <div style="position: absolute; bottom: 10px; left: 12px; font-size: 0.75rem; color: var(--text-dim);">
+        Plano de referencia en interiores · No sustituye posicionamiento físico
+      </div>
+    </div>
+
+    <!-- Lecturas de telemetría recientes -->
+    <div style="margin-top: 1.25rem;">
+      <h4 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+        Últimas Lecturas de Sensores
+      </h4>
+      <div class="ares-table-wrapper">
+        <table class="ares-table">
+          <thead>
+            <tr>
+              <th>Sensor / Canal</th>
+              <th>Valor Capturado</th>
+              <th>Hora</th>
+              <th>Vigencia (RF-08)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in lecturas_recientes %}
+            <tr>
+              <td>{{ l.sensor.tipo }} ({{ l.sensor.canal }})</td>
+              <td style="font-weight: 600;">{{ l.valor }} {{ l.sensor.unidad }} {% if l.simulada %}(simulada){% endif %}</td>
+              <td>{{ l.capturada_en|date:"H:i:s" }}</td>
+              <td>
+                {% if l.es_reciente %}
+                  <span class="badge badge-en_curso">Reciente ({{ l.edad_segundos }}s)</span>
+                {% else %}
+                  <span class="badge badge-vencida">Vencida (&gt;5s)</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">
+                No hay lecturas registradas aún.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel Derecho: Cámara y Controles de Mando (Mockup 02) -->
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- Cámara de video -->
+    <div class="ares-card" style="margin-bottom: 0;">
+      <div class="ares-card-header">
+        <h3 class="ares-card-title">Cámara de Video Local</h3>
+        <span class="badge badge-vencida">Sin Señal</span>
+      </div>
+      <div class="ares-video-box">
+        <svg style="width: 42px; height: 42px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-muted);">Cámara sin señal</span>
+        <span style="font-size: 0.78rem; margin-top: 0.25rem;">Transmisión en red local en espera de enlace RTSP/WebRTC</span>
+      </div>
+    </div>
+
+    <!-- Controles Manuales -->
+    <div class="ares-card" style="margin-bottom: 0;">
+      <div class="ares-card-header">
+        <h3 class="ares-card-title">Control de Movimiento</h3>
+        <span style="font-size: 0.75rem; color: var(--text-dim);">Teleoperación</span>
+      </div>
+
+      {% if can_control %}
+      <div class="ares-remote-controls">
+      <form method="post" action="{% url 'core:mision_control' mision_activa.pk %}">{% csrf_token %}<button name="accion" value="avanzar" class="ares-control-btn" {% if not robot_activo.conectado %}disabled{% endif %}>Avanzar</button></form>
+      <form method="post" action="{% url 'core:mision_control' mision_activa.pk %}">{% csrf_token %}<button name="accion" value="girar_izquierda" class="ares-control-btn" {% if not robot_activo.conectado %}disabled{% endif %}>Izquierda</button></form>
+      <form method="post" action="{% url 'core:mision_control' mision_activa.pk %}">{% csrf_token %}<button name="accion" value="parar" class="ares-btn ares-btn-danger">Solicitar parada</button></form>
+      <form method="post" action="{% url 'core:mision_control' mision_activa.pk %}">{% csrf_token %}<button name="accion" value="girar_derecha" class="ares-control-btn" {% if not robot_activo.conectado %}disabled{% endif %}>Derecha</button></form>
+      <form method="post" action="{% url 'core:mision_control' mision_activa.pk %}">{% csrf_token %}<button name="accion" value="retroceder" class="ares-control-btn" {% if not robot_activo.conectado %}disabled{% endif %}>Retroceder</button></form>
+      </div><p>Las solicitudes esperan confirmación. Sin respuesta, la parada es desconocida; la detención local depende del dispositivo.</p>
+      {% else %}<p>Control disponible únicamente para una misión activa y un usuario autorizado.</p>{% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Fila Inferior: Hallazgos y Bitácora -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+  <!-- Hallazgos Recientes -->
+  <div class="ares-card">
+    <div class="ares-card-header">
+      <h3 class="ares-card-title">Hallazgos Registrados</h3>
+      <a href="{% url 'core:hallazgo_list' %}" class="ares-btn ares-btn-secondary ares-btn-sm">Ver Todos</a>
+    </div>
+    <div class="ares-table-wrapper">
+      <table class="ares-table">
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th>Posición</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in hallazgos_recientes %}
+          <tr>
+            <td>{{ h.descripcion|truncatechars:35 }}</td>
+            <td>{{ h.posicion|default:"--" }}</td>
+            <td><span class="badge badge-{{ h.estado }}">{{ h.estado }}</span></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" style="text-align: center; color: var(--text-dim); padding: 1rem;">
+              No se han documentado hallazgos en la misión activa.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Últimos Eventos / Bitácora -->
+  <div class="ares-card">
+    <div class="ares-card-header">
+      <h3 class="ares-card-title">Actividad Reciente (Bitácora)</h3>
+      <a href="{% url 'telemetria:evento_list' %}" class="ares-btn ares-btn-secondary ares-btn-sm">Ver Auditoría</a>
+    </div>
+    <div class="ares-table-wrapper">
+      <table class="ares-table">
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>Acción</th>
+            <th>Resultado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in eventos_recientes %}
+          <tr>
+            <td>{{ e.fecha_hora|date:"H:i:s" }}</td>
+            <td>{{ e.accion }}</td>
+            <td><span class="badge badge-{{ e.resultado|lower }}">{{ e.resultado }}</span></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" style="text-align: center; color: var(--text-dim); padding: 1rem;">
+              Sin eventos recientes registrados.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

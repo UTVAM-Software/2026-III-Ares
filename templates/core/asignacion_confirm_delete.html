@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Remover Asignación - ARES{% endblock %}
+{% block page_title %}Remover Asignación{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 3rem auto;">
+  <div class="ares-card" style="border-color: rgba(239, 68, 68, 0.4); text-align: center; padding: 2.5rem 1.5rem;">
+    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text-main);">¿Remover Asignación?</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+      ¿Deseas desvincular a <strong>{{ object.usuario.nombre }}</strong> de la misión <strong>"{{ object.mision.nombre }}"</strong>?
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <div style="display: flex; justify-content: center; gap: 1rem;">
+        <a href="{% url 'core:asignacion_list' %}" class="ares-btn ares-btn-secondary">Cancelar</a>
+        <button type="submit" class="ares-btn ares-btn-danger">Confirmar Desvinculación</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

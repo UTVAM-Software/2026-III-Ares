@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Usuario - ARES{% endblock %}
+{% block page_title %}Eliminar Usuario{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 3rem auto;">
+  <div class="ares-card" style="border-color: rgba(239, 68, 68, 0.4); text-align: center; padding: 2.5rem 1.5rem;">
+    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text-main);">¿Eliminar Usuario?</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+      ¿Estás seguro de que deseas eliminar permanentemente la cuenta de usuario <strong>"{{ object.username }}"</strong>?
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <div style="display: flex; justify-content: center; gap: 1rem;">
+        <a href="{% url 'usuarios:auth_user_list' %}" class="ares-btn ares-btn-secondary">Cancelar</a>
+        <button type="submit" class="ares-btn ares-btn-danger">Confirmar Eliminación</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ARES - Control Robótico{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/ares.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  {% if user.is_authenticated %}
+  <div class="ares-app-layout">
+    <!-- Sidebar de Navegación Lateral -->
+    <aside class="ares-sidebar">
+      <div class="ares-brand">
+        <span class="ares-logo-badge">ARES</span>
+        <div>
+          <span class="ares-brand-title">ARES OPERATOR</span>
+          <span class="ares-brand-subtitle">Búsqueda & Rescate</span>
+        </div>
+      </div>
+
+      <ul class="ares-nav">
+        <li class="ares-nav-header">Operación</li>
+        <li>
+          <a href="{% url 'core:dashboard' %}" class="ares-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Centro de Operaciones
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'core:mision_list' %}" class="ares-nav-link {% if 'mision' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+            Misiones
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'core:robot_list' %}" class="ares-nav-link {% if 'robot' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+            Robots
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'core:hallazgo_list' %}" class="ares-nav-link {% if 'hallazgo' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            Hallazgos
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'core:orden_list' %}" class="ares-nav-link {% if 'orden' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Órdenes
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'core:asignacion_list' %}" class="ares-nav-link {% if 'asignacion' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Asignaciones
+          </a>
+        </li>
+
+        <li class="ares-nav-header">Telemetría & Auditoría</li>
+        <li>
+          <a href="{% url 'telemetria:sensor_list' %}" class="ares-nav-link {% if 'sensor' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Sensores
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'telemetria:lectura_list' %}" class="ares-nav-link {% if 'lectura' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Lecturas
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'telemetria:evento_list' %}" class="ares-nav-link {% if 'evento' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Bitácora de Actividad
+          </a>
+        </li>
+
+        {% if ares_admin %}
+        <li class="ares-nav-header">Gestión Django Auth & Roles</li>
+        <li>
+          <a href="{% url 'usuarios:auth_user_list' %}" class="ares-nav-link {% if 'auth_user' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            Usuarios (Django Auth)
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'usuarios:auth_group_list' %}" class="ares-nav-link {% if 'auth_group' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Grupos / Roles
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'usuarios:auth_permission_list' %}" class="ares-nav-link {% if 'auth_permission' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            Permisos del Sistema
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'usuarios:rol_list' %}" class="ares-nav-link {% if 'rol' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            Roles (Negocio)
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'usuarios:usuario_list' %}" class="ares-nav-link {% if 'usuario_list' in request.resolver_match.url_name or 'usuario_create' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="ares-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            Usuarios (Negocio)
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </aside>
+
+    <!-- Contenedor Principal -->
+    <div class="ares-main-content">
+      <header class="ares-topbar">
+        <div class="ares-topbar-title">{% block page_title %}Panel ARES{% endblock %}</div>
+        <div class="ares-user-menu">
+          <div class="ares-user-badge">
+            <span>{{ user.username }}</span>
+            <span class="ares-role-tag">
+              {% if user.is_superuser %}
+                Superadmin
+              {% elif user.groups.first %}
+                {{ ares_role|default:"Sin rol" }}
+              {% else %}
+                Sin rol
+              {% endif %}
+            </span>
+          </div>
+          <form method="post" action="{% url 'logout' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="ares-btn ares-btn-secondary ares-btn-sm">
+              <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              Cerrar Sesión
+            </button>
+          </form>
+        </div>
+      </header>
+
+      <main class="ares-page-body">
+        {% if messages %}
+        <div class="ares-messages">
+          {% for message in messages %}
+          <div class="ares-alert ares-alert-{{ message.tags }}">
+            {% if message.tags == 'error' %}
+              <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {% else %}
+              <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            {% endif %}
+            <span>{{ message }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  {% else %}
+    <!-- Para usuarios no autenticados (Login) -->
+    {% block unauthenticated_content %}{% endblock %}
+  {% endif %}
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
