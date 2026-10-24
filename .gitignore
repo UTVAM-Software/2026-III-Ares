@@ -5,3 +5,11 @@ __pycache__/
 *.sqlite3
 .vscode/
 .DS_Store
+
+.env
+.env.*
+!.env.example
+local_settings.json
+backups/
+
+.venv/

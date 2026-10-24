@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load ares_actions %}
+
+{% block title %}Asignaciones de Misión - ARES{% endblock %}
+{% block page_title %}Asignaciones de Operadores a Misiones{% endblock %}
+
+{% block content %}
+<div class="ares-card">
+  <div class="ares-card-header">
+    <div>
+      <h3 class="ares-card-title">Participantes y Asignaciones (RF-05)</h3>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Autorización y delegación explícita de operadores por misión</span>
+    </div>
+    
+    {% if ares_can.add_asignacion %}<a href="{% url 'core:asignacion_create' %}" class="ares-btn ares-btn-primary">
+      <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nueva Asignación
+    </a>{% endif %}
+    
+  </div>
+
+  <div class="ares-table-wrapper">
+    <table class="ares-table">
+      <thead>
+        <tr>
+          <th>Operador</th>
+          <th>Correo Electrónico</th>
+          <th>Misión Vinculada</th>
+          <th>Robot</th>
+          <th>Fecha de Asignación</th>
+          
+          <th style="text-align: right;">Acciones</th>
+          
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in asignaciones %}{% object_actions a as actions %}
+        <tr>
+          <td style="font-weight: 600;">{{ a.usuario.nombre }}</td>
+          <td>{{ a.usuario.email }}</td>
+          <td>
+            <a href="{% url 'core:mision_detail' a.mision.pk %}">{{ a.mision.nombre }}</a>
+          </td>
+          <td><span style="font-family: monospace; color: var(--primary);">{{ a.mision.robot.codigo }}</span></td>
+          <td>{{ a.fecha_asignacion|date:"Y-m-d H:i" }}</td>
+          
+          <td style="text-align: right;">
+            {% if actions.change %}<a class="ares-btn ares-btn-secondary ares-btn-sm" href="{% url 'core:asignacion_update' a.pk %}">Editar</a>{% endif %} {% if actions.delete %}<a href="{% url 'core:asignacion_delete' a.pk %}" class="ares-btn ares-btn-danger ares-btn-sm">Remover</a>{% endif %}
+          </td>
+          
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+            No hay asignaciones registradas.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% include 'pagination.html' %}
+</div>
+{% endblock %}

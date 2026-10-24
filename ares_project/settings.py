@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +22,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ms4do+jzngov=*bl16p@1*o75ey7b9lx+4r8%_p&=y&r9$(&r#'
+for line in (BASE_DIR / '.env').read_text(encoding='utf-8').splitlines() if (BASE_DIR / '.env').exists() else []:
+    if line.strip() and not line.lstrip().startswith('#') and '=' in line:
+        key,value=line.split('=',1)
+        os.environ.setdefault(key.strip(),value.strip())
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY','')
+if not SECRET_KEY:
+    raise ImproperlyConfigured('Configura DJANGO_SECRET_KEY en .env o en el entorno.')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG','0') == '1'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get('DJANGO_ALLOWED_HOSTS','localhost,127.0.0.1').split(',') if host.strip()]
 
 
 INSTALLED_APPS = [
@@ -57,13 +65,14 @@ ROOT_URLCONF = 'ares_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.access',
             ],
         },
     },
@@ -75,16 +84,14 @@ WSGI_APPLICATION = 'ares_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ares_db', 
-        'USER': 'postgres', 
-        'PASSWORD': '', 
-        'HOST': 'localhost',
-        'PORT': '5500',
-    }
-}
+DATABASES = {'default': {
+    'ENGINE':'django.db.backends.postgresql',
+    'NAME':os.environ.get('DB_NAME','ares_db'),
+    'USER':os.environ.get('DB_USER','postgres'),
+    'PASSWORD':os.environ.get('DB_PASSWORD',''),
+    'HOST':os.environ.get('DB_HOST','localhost'),
+    'PORT':os.environ.get('DB_PORT','5500'),
+}}
 
 
 # Password validation
@@ -127,3 +134,25 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configuración de Autenticación y Control de Accesos (OWASP A01:2021)
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'core:dashboard'
+LOGOUT_REDIRECT_URL = 'login'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+AUTHENTICATION_BACKENDS = ['usuarios.backends.UsernameOrEmailBackend']
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
+CSRF_TRUSTED_ORIGINS = [v for v in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS','').split(',') if v]
+DATA_UPLOAD_MAX_MEMORY_SIZE = 65536

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load ares_actions %}
+
+{% block title %}Lecturas de Telemetría - ARES{% endblock %}
+{% block page_title %}Lecturas de Telemetría (RF-08){% endblock %}
+
+{% block content %}
+<div class="ares-card">
+  <div class="ares-card-header">
+    <div>
+      <h3 class="ares-card-title">Flujo de Telemetría en Tiempo Real</h3>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Diferenciación de lecturas recientes y vencidas (> 5 segundos)</span>
+    </div>
+    
+    {% if ares_can.add_lectura %}<a href="{% url 'telemetria:lectura_create' %}" class="ares-btn ares-btn-primary">
+      <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Capturar Lectura
+    </a>{% endif %}
+    
+  </div>
+
+  <!-- Filtro por Misión -->
+  <div style="margin-bottom: 1.25rem;">
+    <form method="get" style="display: flex; gap: 0.75rem; align-items: center; max-width: 450px;">
+      <select name="mision" class="ares-input" onchange="this.form.submit()">
+        <option value="">-- Filtrar por todas las misiones --</option>
+        {% for m in misiones %}
+          <option value="{{ m.pk }}" {% if selected_mision == m.pk|stringformat:"s" %}selected{% endif %}>
+            {{ m.nombre }} ({{ m.robot.codigo }})
+          </option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  <div class="ares-table-wrapper">
+    <table class="ares-table">
+      <thead>
+        <tr>
+          <th>Misión</th>
+          <th>Robot</th>
+          <th>Sensor / Canal</th>
+          <th>Valor Medido</th>
+          <th>Hora de Captura</th>
+          <th>Vigencia (RF-08)</th>
+          
+          <th style="text-align: right;">Acciones</th>
+          
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lecturas %}{% object_actions l as actions %}
+        <tr>
+          <td style="font-weight: 600;">{{ l.mision.nombre }}</td>
+          <td><span style="font-family: monospace; color: var(--primary);">{{ l.sensor.robot.codigo }}</span></td>
+          <td>{{ l.sensor.tipo }} ({{ l.sensor.canal }})</td>
+          <td style="font-size: 1.05rem; font-weight: 700;">{{ l.valor }} {% if l.simulada %}<small>Simulada</small>{% else %}<small>Dispositivo</small>{% endif %} {{ l.sensor.unidad }}</td>
+          <td>{{ l.capturada_en|date:"Y-m-d H:i:s" }}</td>
+          <td>
+            {% if l.es_reciente %}
+              <span class="badge badge-en_curso">Reciente ({{ l.edad_segundos }}s)</span>
+            {% else %}
+              <span class="badge badge-vencida">Vencida (&gt;5s)</span>
+            {% endif %}
+          </td>
+          
+          <td style="text-align: right;">
+            {% if l.simulada and l.mision.estado != 'cerrada' %}{% if actions.change %}<a href="{% url 'telemetria:lectura_update' l.pk %}" class="ares-btn ares-btn-secondary ares-btn-sm">Editar</a>{% endif %} {% if actions.delete %}<a href="{% url 'telemetria:lectura_delete' l.pk %}" class="ares-btn ares-btn-danger ares-btn-sm">Eliminar</a>{% endif %}{% endif %}
+          </td>
+          
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+            No se han recibido lecturas telemétricas.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'pagination.html' %}
+</div>
+{% endblock %}

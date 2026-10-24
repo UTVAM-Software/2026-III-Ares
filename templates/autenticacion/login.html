@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Iniciar Sesión - ARES Control Robótico{% endblock %}
+
+{% block unauthenticated_content %}
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #0B1220; padding: 1.5rem;">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); max-width: 860px; width: 100%; background-color: #162235; border: 1px solid #233554; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+    
+    <!-- Columna Izquierda: Identidad ARES -->
+    <div style="padding: 3rem 2.5rem; background: linear-gradient(180deg, #162235 0%, #0D1626 100%); display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid #233554;">
+      <div>
+        <div style="display: inline-block; background-color: #F97316; color: white; font-weight: 800; font-size: 1.5rem; padding: 0.35rem 0.85rem; border-radius: 6px; letter-spacing: 2px; margin-bottom: 1.5rem;">
+          ARES
+        </div>
+        <h1 style="font-size: 1.75rem; font-weight: 700; color: #F1F5F9; margin-bottom: 0.5rem; line-height: 1.2;">
+          Cada señal cuenta.
+        </h1>
+        <p style="color: #94A3B8; font-size: 0.95rem; margin-top: 1rem;">
+          Exploración y rescate robótico en un entorno controlado. Supervisión de telemetría, gestión de misiones y control de acceso estricto.
+        </p>
+      </div>
+
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #233554;">
+        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #64748B; font-weight: 600;">
+          Seguridad & Cumplimiento
+        </span>
+        <p style="color: #94A3B8; font-size: 0.82rem; margin-top: 0.25rem;">
+          Mitigación activa OWASP Top 10 A01:2021 (Control de Acceso Roto).
+        </p>
+      </div>
+    </div>
+
+    <!-- Columna Derecha: Formulario de Login -->
+    <div style="padding: 3rem 2.5rem; display: flex; flex-direction: column; justify-content: center;">
+      <h2 style="font-size: 1.4rem; font-weight: 700; color: #F1F5F9; margin-bottom: 0.5rem;">
+        Accede a tu espacio
+      </h2>
+      <p style="color: #94A3B8; font-size: 0.88rem; margin-bottom: 2rem;">
+        Ingresa tus credenciales autorizadas para operar en la red.
+      </p>
+
+      {% if form.errors %}
+      <div style="background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; color: #FCA5A5; font-size: 0.88rem;">
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="ares-form-group">
+          <label class="ares-form-label" for="{{ form.username.id_for_label }}">
+            Usuario o Correo Institucional
+          </label>
+          {{ form.username }}
+        </div>
+
+        <div class="ares-form-group" style="margin-bottom: 1.75rem;">
+          <label class="ares-form-label" for="{{ form.password.id_for_label }}">
+            Contraseña
+          </label>
+          {{ form.password }}
+        </div>
+
+        <button type="submit" class="ares-btn ares-btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem;">
+          Iniciar sesión
+        </button>
+      </form>
+
+      <div style="margin-top: 2rem; text-align: center;">
+        <span style="font-size: 0.8rem; color: #64748B;">
+          Acceso restringido para personal autorizado
+        </span>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

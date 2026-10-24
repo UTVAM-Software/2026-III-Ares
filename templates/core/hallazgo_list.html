@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load ares_actions %}
+
+{% block title %}Registro de Hallazgos - ARES{% endblock %}
+{% block page_title %}Evidencias y Hallazgos (RF-10){% endblock %}
+
+{% block content %}
+<div class="ares-card">
+  <div class="ares-card-header">
+    <div>
+      <h3 class="ares-card-title">Evidencias y Hallazgos Documentados</h3>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Observaciones de campo, obstáculos y puntos de interés</span>
+    </div>
+    
+    {% if ares_can.add_hallazgo %}<a href="{% url 'core:hallazgo_create' %}" class="ares-btn ares-btn-primary">
+      <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Registrar Hallazgo
+    </a>{% endif %}
+    
+  </div>
+
+  <div class="ares-table-wrapper">
+    <table class="ares-table">
+      <thead>
+        <tr>
+          <th>Misión</th>
+          <th>Operador</th>
+          <th>Descripción</th>
+          <th>Posición (X / Y)</th>
+          <th>Hora de Captura</th>
+          <th>Estado</th>
+          
+          <th style="text-align: right;">Acciones</th>
+          
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in hallazgos %}{% object_actions h as actions %}
+        <tr>
+          <td>
+            <a href="{% url 'core:mision_detail' h.asignacion.mision.pk %}" style="font-weight: 600;">
+              {{ h.asignacion.mision.nombre }}
+            </a>
+          </td>
+          <td>{{ h.asignacion.usuario.nombre }}</td>
+          <td>{{ h.descripcion }}</td>
+          <td>{{ h.posicion|default:"--" }}</td>
+          <td>{{ h.hora|date:"Y-m-d H:i:s" }}</td>
+          <td><span class="badge badge-{{ h.estado }}">{{ h.estado }}</span></td>
+          
+          <td style="text-align: right;">
+            {% if actions.change %}<a href="{% url 'core:hallazgo_update' h.pk %}" class="ares-btn ares-btn-secondary ares-btn-sm">Editar</a>{% endif %}
+            
+            {% if actions.delete %}<a href="{% url 'core:hallazgo_delete' h.pk %}" class="ares-btn ares-btn-danger ares-btn-sm">Eliminar</a>{% endif %}
+            
+          </td>
+          
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+            No se han registrado hallazgos de campo aún.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% include 'pagination.html' %}
+</div>
+{% endblock %}

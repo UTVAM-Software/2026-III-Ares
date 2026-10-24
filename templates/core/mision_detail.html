@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ mision.nombre }} - ARES{% endblock %}
+{% block page_title %}Consola de Misión: {{ mision.nombre }}{% endblock %}
+
+{% block content %}
+<!-- Cabecera de Misión y Controles de Estado -->
+<div class="ares-card">
+  <div class="ares-card-header">
+    <div>
+      <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--text-main);">{{ mision.nombre }}</h2>
+      <span style="color: var(--text-muted); font-size: 0.85rem;">Zona de operación: {{ mision.zona }}</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span class="badge badge-{{ mision.estado }}" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+        {{ mision.get_estado_display }}
+      </span>
+
+      <!-- Formulario de Transición de Estado de Misión (RF-06) -->
+      {% if can_control %}
+      <form method="post" action="{% url 'core:mision_cambiar_estado' mision.pk %}" style="display: inline-flex; gap: 0.4rem;">
+        {% csrf_token %}
+        {% if mision.estado != 'en_curso' and mision.estado != 'cerrada' %}
+          <button type="submit" name="accion" value="iniciar" class="ares-btn ares-btn-primary ares-btn-sm">
+            Iniciar Misión
+          </button>
+        {% endif %}
+        {% if mision.estado == 'en_curso' %}
+          <button type="submit" name="accion" value="pausar" class="ares-btn ares-btn-secondary ares-btn-sm">
+            Pausar
+          </button>
+          <button type="submit" name="accion" value="cerrar" class="ares-btn ares-btn-danger ares-btn-sm">
+            Finalizar Misión
+          </button>
+        {% endif %}
+        {% if mision.estado == 'pausada' %}
+          <button type="submit" name="accion" value="iniciar" class="ares-btn ares-btn-primary ares-btn-sm">
+            Reanudar
+          </button>
+          <button type="submit" name="accion" value="cerrar" class="ares-btn ares-btn-danger ares-btn-sm">
+            Cerrar Misión
+          </button>
+        {% endif %}
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Detalles de Misión -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; font-size: 0.88rem;">
+    <div>
+      <span style="color: var(--text-dim); display: block;">Robot Asignado:</span>
+      <strong style="color: var(--primary);">{{ mision.robot.codigo }} - {{ mision.robot.nombre }}</strong>
+    </div>
+    <div>
+      <span style="color: var(--text-dim); display: block;">Creada por:</span>
+      <strong>{{ mision.creador.nombre }} ({{ mision.creador.email }})</strong>
+    </div>
+    <div>
+      <span style="color: var(--text-dim); display: block;">Operador responsable:</span>
+      <strong>{{ mision.operador_responsable.nombre|default:"Sin asignar" }}</strong>
+    </div>
+    <div>
+      <span style="color: var(--text-dim); display: block;">Hora de Inicio:</span>
+      <strong>{{ mision.inicio|date:"Y-m-d H:i:s"|default:"Pendiente" }}</strong>
+    </div>
+    <div>
+      <span style="color: var(--text-dim); display: block;">Hora de Cierre:</span>
+      <strong>{{ mision.fin|date:"Y-m-d H:i:s"|default:"En curso / Abierta" }}</strong>
+    </div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+  
+  <!-- Participantes Asignados (RF-05) -->
+  <div class="ares-card">
+    <div class="ares-card-header">
+      <h3 class="ares-card-title">Operadores Asignados</h3>
+      {% if can_assign %}
+      <a href="{% url 'core:asignacion_create' %}" class="ares-btn ares-btn-secondary ares-btn-sm">+ Asignar</a>
+      {% endif %}
+    </div>
+    <div class="ares-table-wrapper">
+      <table class="ares-table">
+        <thead>
+          <tr>
+            <th>Operador</th>
+            <th>Email</th>
+            <th>Fecha Asignación</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for asig in asignaciones %}
+          <tr>
+            <td style="font-weight: 600;">{{ asig.usuario.nombre }}</td>
+            <td>{{ asig.usuario.email }}</td>
+            <td>{{ asig.fecha_asignacion|date:"Y-m-d H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" style="text-align: center; color: var(--text-dim); padding: 1rem;">
+              No hay operadores explícitamente asignados a esta misión.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Hallazgos Documentados (RF-10) -->
+  <div class="ares-card">
+    <div class="ares-card-header">
+      <h3 class="ares-card-title">Hallazgos y Evidencias</h3>
+      {% if can_add_hallazgo %}
+      <a href="{% url 'core:hallazgo_create' %}" class="ares-btn ares-btn-primary ares-btn-sm">+ Nuevo Hallazgo</a>
+      {% endif %}
+    </div>
+    <div class="ares-table-wrapper">
+      <table class="ares-table">
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th>Posición</th>
+            <th>Hora</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in hallazgos %}
+          <tr>
+            <td>{{ h.descripcion|truncatechars:35 }}</td>
+            <td>{{ h.posicion|default:"--" }}</td>
+            <td>{{ h.hora|date:"H:i:s" }}</td>
+            <td><span class="badge badge-{{ h.estado }}">{{ h.estado }}</span></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 1rem;">
+              Sin hallazgos registrados aún en esta misión.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Órdenes Emitidas en la Misión (RF-07) -->
+<div class="ares-card">
+  <div class="ares-card-header">
+    <h3 class="ares-card-title">Historial de Órdenes Manuales Emitidas</h3>
+    {% if can_add_orden %}
+    <a href="{% url 'core:orden_create' %}" class="ares-btn ares-btn-secondary ares-btn-sm">+ Emitir Orden</a>
+    {% endif %}
+  </div>
+  <div class="ares-table-wrapper">
+    <table class="ares-table">
+      <thead>
+        <tr>
+          <th>Secuencia</th>
+          <th>Acción</th>
+          <th>Operador</th>
+          <th>Vencimiento</th>
+          <th>Estado / Vigencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in ordenes %}
+        <tr>
+          <td style="font-family: monospace;">#{{ o.secuencia }}</td>
+          <td style="font-weight: 600; text-transform: uppercase;">{{ o.accion }}</td>
+          <td>{{ o.asignacion.usuario.nombre }}</td>
+          <td>{{ o.vencimiento|date:"Y-m-d H:i:s" }}</td>
+          <td>
+            <span class="badge badge-{{ o.estado_confirmacion }}">{{ o.estado_confirmacion }}</span>
+            {% if o.esta_vencida %}<small> · Vigencia vencida</small>{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">
+            No se han emitido órdenes en esta misión.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

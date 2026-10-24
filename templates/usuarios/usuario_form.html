@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block page_title %}Gestión ARES{% endblock %}
+{% block content %}
+<div class="ares-card" style="max-width:760px;margin:auto">
+<h2>{% if form.instance.pk %}Editar registro{% else %}Nuevo registro{% endif %}</h2>
+<p>Este es el perfil ARES que se relaciona con las misiones, órdenes y hallazgos; no crea una contraseña ni una segunda cuenta de acceso.</p>
+<p>Para dar de alta a una persona nueva, usa {% if ares_can.add_user %}<a href="{% url 'usuarios:auth_user_create' %}">Usuarios (Django Auth)</a>{% else %}Usuarios (Django Auth){% endif %}. Su perfil se crea automáticamente. Desde esta pantalla puedes editar perfiles o vincular una cuenta que todavía no tenga uno.</p>
+{% if form.errors %}<div class="ares-alert ares-alert-error" role="alert">Revisa los campos indicados. {{ form.non_field_errors }}</div>{% endif %}
+<form method="post">{% csrf_token %}
+{% for field in form %}<div class="ares-form-group">{{ field.label_tag }}{{ field }}{{ field.errors }}{% if field.help_text %}<p>{{ field.help_text }}</p>{% endif %}</div>{% endfor %}
+<button type="submit" class="ares-btn ares-btn-primary">Guardar</button>
+<a class="ares-btn ares-btn-secondary" href="{% url 'core:dashboard' %}">Volver al panel</a>
+</form></div>{% endblock %}
