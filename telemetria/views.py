@@ -141,8 +141,9 @@ class EventoDeleteView(AccessMixin, SafeDeleteMixin, DeleteView):
 class EventoAdminListView(EventoListView):
     template_name='telemetria/evento_admin_list.html'
     def dispatch(self,request,*args,**kwargs):
-        from core.security import is_admin
-        if not is_admin(request.user): return self.handle_no_permission()
+        # [MODIFICADO] Antes solo el Administrador. Ahora también Solo lectura (sin botones de edición).
+        from core.security import is_admin,role,SOLO_LECTURA
+        if not (is_admin(request.user) or role(request.user)==SOLO_LECTURA): return self.handle_no_permission()
         return super().dispatch(request,*args,**kwargs)
     def get_queryset(self):
         return super().get_queryset().filter(es_sistema=False)
