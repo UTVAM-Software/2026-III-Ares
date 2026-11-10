@@ -1,6 +1,13 @@
 """Política compartida por vistas, formularios y navegación."""
 from usuarios.models import Usuario
-ROLES = ('Administrador', 'Operador', 'Observador')
+# [MODIFICADO] Se agregan los roles 'Solo lectura' y 'Cliente'.
+SOLO_LECTURA = 'Solo lectura'
+CLIENTE = 'Cliente'
+ROLES = ('Administrador', 'Operador', 'Observador', SOLO_LECTURA, CLIENTE)
+# [NUEVO] Secciones que puede consultar el Cliente (usuario externo o visitante).
+CLIENTE_MODELOS = (('core', 'mision'), ('core', 'hallazgo'))
+# [NUEVO] Aplicaciones que puede consultar el rol Solo lectura (todo el sistema).
+SOLO_LECTURA_APPS = ('core', 'telemetria', 'usuarios', 'auth')
 
 def business_user(user):
     return Usuario.objects.filter(user=user, activo=True).select_related('rol').first() if user.is_authenticated else None
@@ -15,11 +22,20 @@ def role(user):
 
 def is_admin(user): return role(user) == 'Administrador'
 
+# [NUEVO] Roles que consultan todos los registros, no solo los de sus misiones asignadas.
+def sees_all(user): return role(user) in ('Administrador', SOLO_LECTURA, CLIENTE)
+
 def allowed(user, model, action='view'):
     current = role(user)
     if not current: return False
     opts = model._meta
-    if current != 'Administrador':
+    # [NUEVO] Solo lectura: únicamente "ver", en todas las secciones del sistema.
+    if current == SOLO_LECTURA:
+        if action != 'view' or opts.app_label not in SOLO_LECTURA_APPS: return False
+    # [NUEVO] Cliente: únicamente "ver" misiones y hallazgos.
+    elif current == CLIENTE:
+        if action != 'view' or (opts.app_label, opts.model_name) not in CLIENTE_MODELOS: return False
+    elif current != 'Administrador':
         if opts.app_label not in ('core','telemetria'): return False
         if action != 'view' and (current != 'Operador' or action == 'delete' or opts.model_name not in ('mision','orden','hallazgo','lectura')): return False
     return user.has_perm(f'{opts.app_label}.{action}_{opts.model_name}')
@@ -28,14 +44,19 @@ def missions(user):
     from core.models import Mision
     qs = Mision.objects.all()
     if not role(user): return qs.none()
-    return qs if is_admin(user) else qs.filter(asignaciones__usuario=business_user(user)).distinct()
+    # [MODIFICADO] Antes: is_admin(user). Ahora Solo lectura y Cliente también ven todas.
+    return qs if sees_all(user) else qs.filter(asignaciones__usuario=business_user(user)).distinct()
 
 def scoped(user, model):
     from core.models import Mision, Robot, Asignacion, Orden, Hallazgo
     from telemetria.models import Sensor, Lectura, Evento
     qs = model.objects.all()
-    if not role(user): return qs.none()
-    if is_admin(user): return qs
+    current = role(user)
+    if not current: return qs.none()
+    # [NUEVO] El Cliente solo obtiene registros de misiones y hallazgos.
+    if current == CLIENTE: return qs if model in (Mision, Hallazgo) else qs.none()
+    # [MODIFICADO] Antes: solo Administrador. Ahora Solo lectura también ve todo.
+    if current in ('Administrador', SOLO_LECTURA): return qs
     visible = missions(user)
     if model == Mision: return visible
     if model == Robot: return qs.filter(misiones__in=visible).distinct()

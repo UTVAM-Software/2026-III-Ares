@@ -202,6 +202,8 @@
   </div>
 
   <!-- Últimos Eventos / Bitácora -->
+  {# [MODIFICADO] La tarjeta de bitácora solo aparece si el rol puede ver eventos (el Cliente no). #}
+  {% if ares_can.view_evento %}
   <div class="ares-card">
     <div class="ares-card-header">
       <h3 class="ares-card-title">Actividad Reciente (Bitácora)</h3>
@@ -234,5 +236,6 @@
       </table>
     </div>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

@@ -10,7 +10,8 @@
       <h3 class="ares-card-title">Actividad de Misión & Auditoría de Seguridad</h3>
       <span style="font-size: 0.8rem; color: var(--text-dim);">Reconstrucción de operaciones sin exponer credenciales ni datos sensibles (RF-11 / RNF-08)</span>
     </div>
-    {% if ares_admin %}
+           {# [MODIFICADO] Antes: solo Administrador. Ahora también Solo lectura. #}
+       {% if ares_admin or ares_role == 'Solo lectura' %}
     <a href="{% url 'telemetria:evento_admin_list' %}" class="ares-btn ares-btn-secondary ares-btn-sm">Administrar eventos manuales</a>
     {% endif %}
   </div>
