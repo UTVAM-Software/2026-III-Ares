@@ -13,3 +13,4 @@ local_settings.json
 backups/
 
 .venv/
+staticfiles/

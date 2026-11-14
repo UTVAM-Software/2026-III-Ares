@@ -1,5 +1,47 @@
 # ARES — aplicación Django
 
+## Instalación en pre-producción (servidor)
+
+Requiere Python 3.10–3.14, Git y PostgreSQL 14 o superior. Los comandos están para **Linux**; en **Windows** se indica la diferencia.
+
+**1. Crear el ambiente virtual**
+```bash
+mkdir ares && cd ares
+python3 -m venv venv
+source venv/bin/activate            # Windows: venv\Scripts\activate
+```
+
+**2. Descargar el código fuente**
+```bash
+git clone https://github.com/UTVAM-Software/2026-III-Ares.git
+cd 2026-III-Ares
+```
+
+**3. Configurar la base de datos y el archivo `.env`**
+```bash
+sudo -u postgres psql -c "CREATE DATABASE ares_db;"     # Windows: psql -U postgres -c "CREATE DATABASE ares_db;"
+python configurar_env.py
+```
+`configurar_env.py` pregunta los datos de PostgreSQL y los hosts permitidos (agregar la IP o el dominio del servidor) y crea `.env` con una clave secreta aleatoria. También se puede copiar `.env.example` a `.env` y completarlo a mano.
+
+**4. Instalar las herramientas de la aplicación (Django)**
+```bash
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py setup_ares
+python manage.py collectstatic --noinput
+python manage.py createsuperuser
+```
+`migrate` crea las tablas y los cinco roles (Administrador, Operador, Observador, Solo lectura y Cliente). `setup_ares` vuelve a verificar los roles sin crear contraseñas.
+
+**5. Activar el servicio web**
+```bash
+python manage.py runserver 0.0.0.0:8000
+```
+Abrir `http://IP_DEL_SERVIDOR:8000/` e iniciar sesión con el superusuario del paso 4.
+
+Notas: con `DJANGO_DEBUG=0` la aplicación sirve sus estilos mediante WhiteNoise. `DJANGO_HTTPS=1` solo debe activarse cuando el servidor tenga HTTPS; con `0` funciona por HTTP. La conexión con el robot físico (Control WiFi) se integrará en una actualización posterior.
+
 Servidor académico de misiones, roles, telemetría y trazabilidad. PostgreSQL es la base funcional. La integración física del robot no se considera acreditada por las pruebas del servidor.
 
 ## Instalación local en Windows
