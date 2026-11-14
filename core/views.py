@@ -277,3 +277,69 @@ class MisionControlView(AccessMixin,DetailView):
             record(request.user,'Orden rechazada','Validación rechazada',mission)
             messages.error(request,' '.join(error for errors in form.errors.values() for error in errors))
         return redirect('core:dashboard')
+
+
+# ---------------------------------------------------------------------------
+# [NUEVO] Control WiFi del robot: lo usan el Administrador y el Operador
+# responsable de una misión en curso. Usa las mismas órdenes y validaciones
+# que el resto de ARES (el robot las recoge con su credencial).
+# ---------------------------------------------------------------------------
+def wifi_mission(user, pk=None):
+    """Misión en curso que el usuario puede controlar (Administrador: cualquiera; Operador: solo la suya)."""
+    current=role(user)
+    if current not in ('Administrador','Operador') or not allowed(user,Orden,'add'):
+        raise PermissionDenied('El control WiFi es exclusivo para administradores y operadores.')
+    qs=Mision.objects.select_related('robot').filter(estado='en_curso')
+    if current=='Operador': qs=qs.filter(operador_responsable=business_user(user))
+    if pk is not None: qs=qs.filter(pk=pk)
+    return qs.order_by('-inicio').first()
+
+class ControlWifiView(AresLoginRequiredMixin,View):
+    """Sección siempre visible para quien puede ver órdenes; solo se habilita para quien puede controlar."""
+    def get(self,request):
+        user=request.user
+        if not allowed(user,Orden,'view'): raise PermissionDenied('Sin acceso a la sección de control.')
+        puede_mandar=role(user) in ('Administrador','Operador') and allowed(user,Orden,'add')
+        mision=wifi_mission(user) if puede_mandar else None
+        habilitado=mision is not None
+        motivo=''
+        if not habilitado:
+            # Misión en curso visible para el usuario, solo para mostrar su nombre.
+            mision=missions(user).filter(estado='en_curso').select_related('robot').order_by('-inicio').first()
+            if not puede_mandar: motivo='Tu rol solo puede consultar esta sección.'
+            elif mision: motivo='No eres el operador responsable de la misión en curso.'
+            else: motivo='No hay una misión en curso.'
+        return render(request,'core/control_wifi.html',{'mision':mision,'habilitado':habilitado,'motivo':motivo})
+
+class ControlWifiOrdenView(AresLoginRequiredMixin,View):
+    http_method_names=['post']
+    def post(self,request,pk):
+        from datetime import timedelta
+        from django.http import JsonResponse
+        from django.utils import timezone
+        from django.db.models import Max
+        with transaction.atomic():
+            mission=wifi_mission(request.user,pk)
+            if not mission: return JsonResponse({'ok':False,'mensaje':'La misión no está en curso o no tienes permiso para controlarla.'},status=404)
+            Robot.objects.select_for_update().get(pk=mission.robot_id)
+            mission=Mision.objects.select_for_update().get(pk=mission.pk)
+            assignment=mission.asignaciones.filter(usuario_id=mission.operador_responsable_id).first()
+            if not assignment: return JsonResponse({'ok':False,'mensaje':'La misión no tiene operador responsable asignado.'},status=400)
+            last=Orden.objects.filter(asignacion=assignment).aggregate(last=Max('secuencia'))['last'] or 0
+            form=OrdenForm(actor=request.user,data={'asignacion':assignment.pk,'secuencia':last+1,'accion':request.POST.get('accion'),
+                'duracion_ms':500,'vencimiento':(timezone.now()+timedelta(seconds=2)).isoformat()})
+            if form.is_valid():
+                order=form.save()
+                record(request.user,f'Orden WiFi: {order.accion}','Pendiente de confirmación',mission)
+                return JsonResponse({'ok':True,'mensaje':'Orden enviada. Esperando confirmación del robot.'})
+            record(request.user,'Orden WiFi rechazada','Validación rechazada',mission)
+            return JsonResponse({'ok':False,'mensaje':' '.join(error for errors in form.errors.values() for error in errors)},status=400)
+
+class ControlWifiEstadoView(AresLoginRequiredMixin,View):
+    def get(self,request,pk):
+        from django.http import JsonResponse
+        mission=wifi_mission(request.user,pk)
+        if not mission: return JsonResponse({'ok':False,'mensaje':'La misión ya no está en curso.'},status=404)
+        last=Orden.objects.filter(asignacion__mision=mission).order_by('-secuencia').first()
+        return JsonResponse({'ok':True,'conectado':mission.robot.conectado,
+            'ultima':{'accion':last.accion,'estado':last.estado_confirmacion} if last else None})

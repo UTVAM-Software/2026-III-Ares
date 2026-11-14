@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{# [NUEVO] Control WiFi del robot (sustituye a "Órdenes" en el menú).                 #}
+{# Cámara arriba y cruceta de control abajo. Siempre visible; solo se habilita para   #}
+{# el Administrador y el Operador responsable cuando hay una misión en curso.         #}
+
+{% block title %}Control WiFi - ARES{% endblock %}
+{% block page_title %}Control WiFi del Robot{% endblock %}
+
+{% block extra_head %}
+<style>
+  .wifi-pad { display:grid; grid-template-columns:repeat(3, 96px); grid-template-rows:repeat(3, 96px); gap:12px; justify-content:center; margin:1.5rem 0 1rem; }
+  .wifi-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:14px; cursor:pointer;
+              border:1px solid var(--border-color); background:var(--bg-card-hover); color:var(--text-main); font-weight:700; font-size:.85rem;
+              transition:transform .08s, background-color .15s, border-color .15s; user-select:none; }
+  .wifi-btn svg { width:32px; height:32px; }
+  .wifi-btn small { font-size:.7rem; font-weight:400; color:var(--text-dim); }
+  .wifi-btn:hover:not(:disabled) { border-color:var(--primary); color:var(--primary); }
+  .wifi-btn.pulsado { transform:scale(.94); background:rgba(16,185,129,.25); border-color:var(--success); color:#34D399; }
+  .wifi-btn:disabled { background:var(--bg-input); color:var(--text-dim); border-style:dashed; cursor:not-allowed; opacity:.6; }
+  .wifi-alto { border-radius:50%; background:var(--danger); border-color:var(--danger); color:#fff; }
+  .wifi-alto small { color:rgba(255,255,255,.85); }
+  .wifi-alto:hover:not(:disabled) { color:#fff; border-color:#fff; }
+  .wifi-alto.pulsado { background:#DC2626; color:#fff; border-color:#fff; }
+  .wifi-badges { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+  .wifi-badges .badge { display:inline-flex; align-items:center; gap:.35rem; }
+  .wifi-badges svg { width:14px; height:14px; }
+  .wifi-pie { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem;
+              border-top:1px solid var(--border-color); margin-top:1rem; padding-top:.9rem; font-size:.9rem; color:var(--text-muted); }
+  #wifi-aviso { text-align:center; font-size:.9rem; min-height:1.4rem; color:var(--text-muted); }
+  @media (max-width: 480px) { .wifi-pad { grid-template-columns:repeat(3, 84px); grid-template-rows:repeat(3, 84px); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:760px;margin:auto">
+
+  <!-- Parte superior: Cámara (movida desde el Centro de Operaciones) -->
+  <div class="ares-card">
+    <div class="ares-card-header">
+      <div>
+        <h3 class="ares-card-title">Cámara de Video Local</h3>
+      </div>
+      <span class="badge badge-vencida">Sin Señal</span>
+    </div>
+    <div class="ares-video-box">
+      <svg style="width: 42px; height: 42px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+      <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-muted);">Cámara sin señal</span>
+      <span style="font-size: 0.78rem; margin-top: 0.25rem;">Transmisión en red local en espera de enlace RTSP/WebRTC</span>
+    </div>
+  </div>
+
+  <!-- Parte inferior: Control de movimiento (siempre visible) -->
+  <div class="ares-card">
+    <div class="ares-card-header">
+      <div>
+        <h3 class="ares-card-title">Control de Movimiento</h3>
+        <span style="font-size:.8rem;color:var(--text-dim);">
+          {% if mision %}{{ mision.nombre }} · Robot {{ mision.robot.codigo }}{% else %}Sin misión en curso{% endif %}
+        </span>
+      </div>
+      <div class="wifi-badges">
+        {% if habilitado %}
+          <span id="wifi-habilitado" class="badge badge-en_curso"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Habilitado</span>
+        {% else %}
+          <span id="wifi-habilitado" class="badge badge-vencida"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>No habilitado</span>
+        {% endif %}
+        {% if mision %}
+          <span id="wifi-enlace" class="badge {% if mision.robot.conectado %}badge-en_curso{% elif habilitado %}badge-pendiente{% else %}badge-vencida{% endif %}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg><span id="wifi-enlace-texto">{% if mision.robot.conectado %}Robot conectado{% else %}Robot sin enlace{% endif %}</span></span>
+        {% endif %}
+      </div>
+    </div>
+
+    <form id="wifi-form" {% if habilitado %}data-orden-url="{% url 'core:control_wifi_orden' mision.pk %}" data-estado-url="{% url 'core:control_wifi_estado' mision.pk %}" data-conectado="{% if mision.robot.conectado %}1{% else %}0{% endif %}"{% endif %}>
+      {% csrf_token %}
+      <div class="wifi-pad">
+        <span></span>
+        <button type="button" class="wifi-btn wifi-mov" data-accion="avanzar" aria-label="Adelante" {% if not habilitado or not mision.robot.conectado %}disabled{% endif %}>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>Adelante<small>tecla ↑</small>
+        </button>
+        <span></span>
+        <button type="button" class="wifi-btn wifi-mov" data-accion="girar_izquierda" aria-label="Izquierda" {% if not habilitado or not mision.robot.conectado %}disabled{% endif %}>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>Izquierda<small>tecla ←</small>
+        </button>
+        <button type="button" class="wifi-btn wifi-alto" data-accion="parar" aria-label="Alto" {% if not habilitado %}disabled{% endif %}>
+          <svg fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>ALTO<small>espacio</small>
+        </button>
+        <button type="button" class="wifi-btn wifi-mov" data-accion="girar_derecha" aria-label="Derecha" {% if not habilitado or not mision.robot.conectado %}disabled{% endif %}>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>Derecha<small>tecla →</small>
+        </button>
+        <span></span>
+        <button type="button" class="wifi-btn wifi-mov" data-accion="retroceder" aria-label="Reversa" {% if not habilitado or not mision.robot.conectado %}disabled{% endif %}>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>Reversa<small>tecla ↓</small>
+        </button>
+        <span></span>
+      </div>
+    </form>
+
+    {% if habilitado %}
+      <div id="wifi-aviso" role="status">{% if mision.robot.conectado %}Cada toque mueve el robot medio segundo.{% else %}Sin enlace con el robot: solo puedes usar ALTO.{% endif %}</div>
+    {% else %}
+      <div class="ares-alert ares-alert-error" role="status">Control no habilitado. {{ motivo }}</div>
+    {% endif %}
+
+    <div class="wifi-pie">
+      <span>Última orden: <span id="wifi-ultima" class="badge" style="background:none;border:none;color:var(--text-dim);">ninguna</span></span>
+      {% if ares_can.view_orden %}
+      <a href="{% url 'core:orden_list' %}" style="color:var(--info);">Historial de órdenes</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if habilitado %}
+<script>
+(function () {
+  const form = document.getElementById('wifi-form');
+  const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+  const aviso = document.getElementById('wifi-aviso');
+  const enlace = document.getElementById('wifi-enlace');
+  const enlaceTexto = document.getElementById('wifi-enlace-texto');
+  const ultima = document.getElementById('wifi-ultima');
+  const movimiento = form.querySelectorAll('.wifi-mov');
+  const alto = form.querySelector('.wifi-alto');
+  const nombres = {avanzar:'Adelante', girar_izquierda:'Izquierda', parar:'Alto', girar_derecha:'Derecha', retroceder:'Reversa'};
+  const estados = {pendiente:['pendiente','badge-pendiente'], aceptada:['aceptada por el robot','badge-aceptada'],
+                   rechazada:['rechazada','badge-rechazada'], vencida:['vencida','badge-vencida'], desconocida:['sin confirmar','badge-vencida']};
+  let conectado = form.dataset.conectado === '1';
+  let enviando = false;
+
+  function aplicarEnlace() {
+    movimiento.forEach(b => b.disabled = enviando || !conectado);
+    alto.disabled = enviando;
+    enlace.className = 'badge ' + (conectado ? 'badge-en_curso' : 'badge-pendiente');
+    enlaceTexto.textContent = conectado ? 'Robot conectado' : 'Robot sin enlace';
+  }
+
+  function avisar(texto, color) {
+    aviso.textContent = texto;
+    aviso.style.color = color || 'var(--text-muted)';
+  }
+
+  function pulsar(boton) {
+    boton.classList.add('pulsado');
+    setTimeout(() => boton.classList.remove('pulsado'), 180);
+  }
+
+  async function enviar(boton) {
+    if (boton.disabled) return;
+    pulsar(boton);
+    const accion = boton.dataset.accion;
+    enviando = true; aplicarEnlace();
+    const datos = new FormData();
+    datos.append('accion', accion);
+    try {
+      const resp = await fetch(form.dataset.ordenUrl, {method:'POST', body:datos, headers:{'X-CSRFToken':csrf}, credentials:'same-origin'});
+      const json = await resp.json().catch(() => ({ok:false, mensaje:'Acceso denegado o sesión expirada.'}));
+      avisar(nombres[accion] + ': ' + json.mensaje, json.ok ? '#34D399' : '#F87171');
+    } catch (e) {
+      avisar('No se pudo contactar al servidor ARES.', '#F87171');
+    } finally {
+      enviando = false; aplicarEnlace(); actualizar();
+    }
+  }
+
+  async function actualizar() {
+    try {
+      const resp = await fetch(form.dataset.estadoUrl, {credentials:'same-origin'});
+      if (!resp.ok) return;
+      const json = await resp.json();
+      if (json.conectado !== conectado) {
+        conectado = json.conectado;
+        avisar(conectado ? 'Cada toque mueve el robot medio segundo.' : 'Sin enlace con el robot: solo puedes usar ALTO.');
+      }
+      aplicarEnlace();
+      if (json.ultima) {
+        const [texto, clase] = estados[json.ultima.estado] || [json.ultima.estado, 'badge-pendiente'];
+        ultima.textContent = nombres[json.ultima.accion] + ' · ' + texto;
+        ultima.className = 'badge ' + clase;
+        ultima.removeAttribute('style');
+      }
+    } catch (e) { /* se reintenta en el siguiente ciclo */ }
+  }
+
+  form.querySelectorAll('button[data-accion]').forEach(b => b.addEventListener('click', () => enviar(b)));
+  const teclas = {ArrowUp:'avanzar', ArrowDown:'retroceder', ArrowLeft:'girar_izquierda', ArrowRight:'girar_derecha', ' ':'parar'};
+  document.addEventListener('keydown', (ev) => {
+    const accion = teclas[ev.key];
+    if (!accion || ev.repeat) return;
+    ev.preventDefault();
+    enviar(form.querySelector('button[data-accion="' + accion + '"]'));
+  });
+
+  actualizar();
+  setInterval(actualizar, 1500);
+})();
+</script>
+{% endif %}
+{% endblock %}

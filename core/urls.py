@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     DashboardView, MisionControlView,
+    ControlWifiView, ControlWifiOrdenView, ControlWifiEstadoView,  # [NUEVO]
     MisionListView, MisionDetailView, MisionCreateView, MisionUpdateView, MisionDeleteView, MisionCambiarEstadoView,
     RobotListView, RobotCreateView, RobotUpdateView, RobotDeleteView,
     AsignacionListView, AsignacionCreateView, AsignacionUpdateView, AsignacionDeleteView,
@@ -47,4 +48,10 @@ urlpatterns = [
     path('hallazgos/<uuid:pk>/editar/', HallazgoUpdateView.as_view(), name='hallazgo_update'),
     path('hallazgos/<uuid:pk>/eliminar/', HallazgoDeleteView.as_view(), name='hallazgo_delete'),
     path('misiones/<uuid:pk>/control/', MisionControlView.as_view(), name='mision_control'),
+    
+    
+    # [NUEVO] Control WiFi (Administrador y Operador responsable)
+    path('control-wifi/', ControlWifiView.as_view(), name='control_wifi'),
+    path('control-wifi/<uuid:pk>/orden/', ControlWifiOrdenView.as_view(), name='control_wifi_orden'),
+    path('control-wifi/<uuid:pk>/estado/', ControlWifiEstadoView.as_view(), name='control_wifi_estado'),
 ]

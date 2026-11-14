@@ -223,7 +223,7 @@ class SecurityRegressionTests(TestCase):
             urls=importlib.import_module(prefix+'.urls').urlpatterns
             for item in urls:
                 name=item.name
-                if name.startswith('device_') or name in ('mision_cambiar_estado','mision_control'): continue
+                if name.startswith('device_') or name in ('mision_cambiar_estado','mision_control','control_wifi_orden','control_wifi_estado'): continue  # [MODIFICADO] rutas JSON del Control WiFi
                 pk=None
                 if '<' in str(item.pattern):
                     slug=name.replace('auth_','').rsplit('_',1)[0]
