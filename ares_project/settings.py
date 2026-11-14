@@ -33,6 +33,10 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG','0') == '1'
 
+# [PRE-PRODUCCIÓN] Activar solo cuando el servidor tenga HTTPS. Con 0 la app funciona por HTTP
+# (redirección a HTTPS, cookies seguras y HSTS desactivados).
+HTTPS = os.environ.get('DJANGO_HTTPS','0') == '1'
+
 ALLOWED_HOSTS = [host.strip() for host in os.environ.get('DJANGO_ALLOWED_HOSTS','localhost,127.0.0.1').split(',') if host.strip()]
 
 
@@ -52,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # [PRE-PRODUCCIÓN] sirve CSS/JS aunque DEBUG=0
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -90,7 +95,7 @@ DATABASES = {'default': {
     'USER':os.environ.get('DB_USER','postgres'),
     'PASSWORD':os.environ.get('DB_PASSWORD',''),
     'HOST':os.environ.get('DB_HOST','localhost'),
-    'PORT':os.environ.get('DB_PORT','5500'),
+    'PORT':os.environ.get('DB_PORT','5432'),
 }}
 
 
@@ -129,6 +134,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # [PRE-PRODUCCIÓN] destino de collectstatic
+WHITENOISE_USE_FINDERS = True  # [PRE-PRODUCCIÓN] también sirve static/ si no se ejecutó collectstatic
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -145,12 +152,13 @@ AUTHENTICATION_BACKENDS = ['usuarios.backends.UsernameOrEmailBackend']
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
-SECURE_SSL_REDIRECT = not DEBUG
-SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
-SECURE_HSTS_PRELOAD = not DEBUG
+# [PRE-PRODUCCIÓN] Antes dependían de "not DEBUG"; ahora de DJANGO_HTTPS para poder operar por HTTP.
+SESSION_COOKIE_SECURE = HTTPS
+CSRF_COOKIE_SECURE = HTTPS
+SECURE_SSL_REDIRECT = HTTPS
+SECURE_HSTS_SECONDS = 31536000 if HTTPS else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = HTTPS
+SECURE_HSTS_PRELOAD = HTTPS
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
